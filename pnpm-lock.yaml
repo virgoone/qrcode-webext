@@ -2,6 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@ianvs/prettier-plugin-sort-imports': 4.1.1
+  '@plasmohq/selector': ^0.0.5
   '@plasmohq/storage': ^1.9.0
   '@radix-ui/colors': 2.1.0
   '@radix-ui/react-slot': ^1.0.2
@@ -24,6 +25,7 @@ specifiers:
   windy-radix-palette: 0.6.1
 
 dependencies:
+  '@plasmohq/selector': 0.0.5_react@18.2.0
   '@plasmohq/storage': 1.9.0_react@18.2.0
   '@radix-ui/react-slot': 1.0.2_u5zja476buyywzbvglb2fbhaii
   '@radix-ui/react-tabs': 1.0.4_odyphbpq4up353b3xkkenmy5wy
@@ -2226,6 +2228,17 @@ packages:
       - velocityjs
       - walrus
       - whiskers
+    dev: false
+
+  /@plasmohq/selector/0.0.5_react@18.2.0:
+    resolution: {integrity: sha512-CUEB60NjBp12zM++OIEhwumTeq6U8vT+i+PayKWOWi5zk1TS79Ke2TAL0q2scZbLV1LycT5iCPUp403ieYqxHA==}
+    peerDependencies:
+      react: ^16.8.6 || ^17 || ^18
+    peerDependenciesMeta:
+      react:
+        optional: true
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /@plasmohq/storage/1.9.0_react@18.2.0:
