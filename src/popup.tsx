@@ -16,13 +16,14 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react"
 import { Button } from "~features/button"
 import { Card, CardContent, CardFooter } from "~features/card"
 import { Input } from "~features/input"
+import { copyImageToClipboard } from "~utils/copy-image"
 
 function IndexPopup() {
   const [options, setOptions] = useState<Options>({
     width: 300,
     height: 300,
     type: "svg" as DrawType,
-    data: "https://douni.one",
+    data: "",
     margin: 5,
     qrOptions: {
       typeNumber: 0 as TypeNumber,
@@ -37,42 +38,23 @@ function IndexPopup() {
     },
     dotsOptions: {
       color: "#222222",
-      // gradient: {
-      //   type: 'linear', // 'radial'
-      //   rotation: 0,
-      //   colorStops: [{ offset: 0, color: '#8688B2' }, { offset: 1, color: '#77779C' }]
-      // },
       type: "rounded" as DotType
     },
     backgroundOptions: {
       color: "#fff"
-      // gradient: {
-      //   type: 'linear', // 'radial'
-      //   rotation: 0,
-      //   colorStops: [{ offset: 0, color: '#ededff' }, { offset: 1, color: '#e6e7ff' }]
-      // },
     },
     cornersSquareOptions: {
       color: "#222222",
       type: "extra-rounded" as CornerSquareType
-      // gradient: {
-      //   type: 'linear', // 'radial'
-      //   rotation: 180,
-      //   colorStops: [{ offset: 0, color: '#25456e' }, { offset: 1, color: '#4267b2' }]
-      // },
     },
     cornersDotOptions: {
       color: "#222222",
       type: "dot" as CornerDotType
-      // gradient: {
-      //   type: 'linear', // 'radial'
-      //   rotation: 180,
-      //   colorStops: [{ offset: 0, color: '#00266e' }, { offset: 1, color: '#4060b3' }]
-      // },
     }
   })
   const [qrCode] = useState<QRCodeStyling>(new QRCodeStyling(options))
   const ref = useRef<HTMLDivElement>(null)
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copying" | "success" | "error">("idle")
 
   useEffect(() => {
     if (!qrCode) return
@@ -86,12 +68,26 @@ function IndexPopup() {
   }, [qrCode, ref])
 
   useEffect(() => {
-    chrome.tabs.query({ currentWindow: true, active: true }).then((tabs) => {
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search)
+    const text = urlParams.get("text")
+
+    if (text) {
       setOptions((options) => ({
         ...options,
-        data: tabs?.[0]?.url
+        data: decodeURIComponent(text)
       }))
-    })
+    } else {
+      // If no text parameter, get current tab URL
+      chrome.tabs.query({ currentWindow: true, active: true }).then((tabs) => {
+        if (tabs[0]?.url) {
+          setOptions((options) => ({
+            ...options,
+            data: tabs[0].url
+          }))
+        }
+      })
+    }
   }, [])
 
   const onDataChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -104,8 +100,25 @@ function IndexPopup() {
   const onDownloadClick = () => {
     if (!qrCode) return
     qrCode.download({
-      extension: 'svg'
+      extension: "svg"
     })
+  }
+
+  const onCopyClick = async () => {
+    if (!ref.current) return
+
+    const svgElement = ref.current.querySelector('svg')
+    if (!svgElement) return
+
+    setCopyStatus("copying")
+    try {
+      await copyImageToClipboard(svgElement)
+      setCopyStatus("success")
+      setTimeout(() => setCopyStatus("idle"), 2000)
+    } catch (error) {
+      setCopyStatus("error")
+      setTimeout(() => setCopyStatus("idle"), 2000)
+    }
   }
 
   return (
@@ -118,20 +131,34 @@ function IndexPopup() {
               id="url"
               value={options.data}
               onChange={onDataChange}
-              defaultValue="输入地址生成二维码"
+              placeholder="输入文字或链接生成二维码"
             />
           )}
         </div>
       </CardContent>
-      <CardFooter className="pt-6">
+      <CardFooter className="pt-6 flex gap-2">
         <Button
-          className="flex flex-row items-center px-4 py-2 text-sm rounded-lg transition-all border-none
-      shadow-gray-1 shadow-xs hover:shadow-md
-      text-gray-12 bg-gray-2
-      hover:bg-gray-3 
-      active:bg-gray-4
-      disabled:bg-gray-1 disabled:text-gray-11
-      active:scale-105 w-full" onClick={onDownloadClick}>
+          className="flex-1 flex-row items-center px-4 py-2 text-sm rounded-lg transition-all border-none
+          shadow-gray-1 shadow-xs hover:shadow-md
+          text-gray-12 bg-gray-2
+          hover:bg-gray-3 
+          active:bg-gray-4
+          disabled:bg-gray-1 disabled:text-gray-11
+          active:scale-105"
+          onClick={onCopyClick}>
+          {copyStatus === "copying" ? "复制中..." :
+            copyStatus === "success" ? "已复制" :
+              copyStatus === "error" ? "复制失败" : "复制图片"}
+        </Button>
+        <Button
+          className="flex-1 flex-row items-center px-4 py-2 text-sm rounded-lg transition-all border-none
+          shadow-gray-1 shadow-xs hover:shadow-md
+          text-gray-12 bg-gray-2
+          hover:bg-gray-3 
+          active:bg-gray-4
+          disabled:bg-gray-1 disabled:text-gray-11
+          active:scale-105"
+          onClick={onDownloadClick}>
           保存图片
         </Button>
       </CardFooter>

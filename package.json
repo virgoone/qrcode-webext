@@ -16,6 +16,7 @@
     "@radix-ui/react-tabs": "^1.0.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "jsqr": "^1.4.0",
     "plasmo": "0.84.0",
     "qr-code-styling": "1.6.0-rc.1",
     "react": "18.2.0",
