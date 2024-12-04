@@ -23,7 +23,7 @@ function IndexPopup() {
     width: 300,
     height: 300,
     type: "svg" as DrawType,
-    data: "",
+    data: "https://douni.one",
     margin: 5,
     qrOptions: {
       typeNumber: 0 as TypeNumber,

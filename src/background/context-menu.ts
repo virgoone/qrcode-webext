@@ -35,56 +35,46 @@ export function handleContextMenuClick(
 ) {
   switch (info.menuItemId) {
     case CONTEXT_MENU_ITEMS.GENERATE_QR_SELECTION: {
-      if (info.selectionText) {
-        chrome.windows.create({
-          url: chrome.runtime.getURL("popup.html") + `?text=${encodeURIComponent(info.selectionText)}`,
-          type: "popup",
-          width: 400,
-          height: 500
+      if (info.selectionText && tab?.id) {
+        console.log('info.selectionText--->', info.selectionText)
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'SHOW_QR_GEN_RESULT',
+          data: info.selectionText
         })
       }
       break
     }
 
     case CONTEXT_MENU_ITEMS.GENERATE_QR_LINK: {
-      if (info.linkUrl) {
-        chrome.windows.create({
-          url: chrome.runtime.getURL("popup.html") + `?text=${encodeURIComponent(info.linkUrl)}`,
-          type: "popup",
-          width: 400,
-          height: 500
+      console.log('info.linkUrl--->', info.linkUrl)
+      if (info.linkUrl && tab?.id) {
+        chrome.tabs.sendMessage(tab.id, {
+          type: 'SHOW_QR_GEN_RESULT',
+          data: info.linkUrl
         })
       }
       break
     }
 
     case CONTEXT_MENU_ITEMS.SCAN_QR: {
-      if (info.srcUrl) {
+      if (info.srcUrl && tab?.id) {
         scanQRCodeFromImage(info.srcUrl)
           .then((result) => {
+            console.log('扫码成功--->', result, tab.id)
             if (result) {
-              chrome.notifications.create({
-                type: "basic",
-                iconUrl: chrome.runtime.getURL("assets/icon.png"),
-                title: "二维码扫描结果",
-                message: result,
-                buttons: [
-                  {
-                    title: "复制内容"
-                  },
-                  {
-                    title: "在新标签页打开"
-                  }
-                ]
+              // 发送消息给 content script 显示 Modal
+              chrome.tabs.sendMessage(tab.id, {
+                type: 'SHOW_QR_RESULT',
+                data: result
               })
             }
           })
           .catch((error) => {
-            chrome.notifications.create({
-              type: "basic",
-              iconUrl: chrome.runtime.getURL("assets/icon.png"),
-              title: "扫描失败",
-              message: error.message
+            console.error('扫码失败--->', error)
+            // 可以选择显示错误 Modal
+            chrome.tabs.sendMessage(tab.id, {
+              type: 'SHOW_QR_RESULT_ERROR',
+              data: `扫描失败: ${error.message}`
             })
           })
       }
